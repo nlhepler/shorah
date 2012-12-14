@@ -4,12 +4,10 @@ SHELL = /bin/bash
 #HOSTNAME = echo hostname
 hostname := $(shell hostname)
 whoami := $(shell whoami)
-host-type := $(shell uname)
-CCFLAGS = -Wall -Wextra -O2 -ffast-math -funroll-loops# -m32 -DDEBUG
+CFLAGS = -Wall -Wextra -O2 -ffast-math -funroll-loops# -m32 -DDEBUG
 WFLAGS =
-OLIBS = 
-CPP = g++
-SUBDIRS = samtools
+OLIBS =
+CXX = g++
 
 # DOCUMENTATION
 DOXYGEN = /usr/bin/doxygen
@@ -17,9 +15,8 @@ DOXYFILE_1 = dpm_src/doxyfile
 
 # EDIT THESE LINES TO INCLUDE GSL
 CXLIBS = -lgsl -lgslcblas
-CFLAGS = $(CCFLAGS) -I/usr/local/include
-XLIBS  = -L/usr/local/lib $(CXLIBS)
-CPPFLAGS = $(CFLAGS)
+XLIBS  = $(CXLIBS)
+CXXFLAGS = $(CFLAGS)
 
 #SRC_1 = dpm_src/dmm_sampler.cpp
 OBJS_1 = dpm_src/dpm_sampler.o
@@ -38,76 +35,66 @@ SRC_4 = b2w_src/b2w.c
 SRC_5 = filter_src/fil.c
 EXE_4 = b2w
 EXE_5 = fil
-FLAGS_4 = -Isamtools -Lsamtools -lbam -lm -lz
-FLAGS_5 = -Isamtools -Lsamtools -lbam -lm -lz $(XLIBS) 
+FLAGS_4 = -I./samtools -L./samtools -lbam -lm -lz
+FLAGS_5 = -I./samtools -L./samtools -lbam -lm -lz $(XLIBS)
 LIB_SAMTOOLS = samtools
 
+SUBDIRS = $(LIB_SAMTOOLS) 
 
-%.o : %.cpp %.h data_structures.h Makefile # only used for C program diri_sampler
+all: $(EXE_1) $(EXE_2) $(EXE_3) $(EXE_4) $(EXE_5)
+
+dpm_src/%.o: dpm_src/%.cpp dpm_src/%.h dpm_src/data_structures.h # only used for C program diri_sampler
 	@echo ''
 	@echo '*********************************'
-	@echo '   making object: $@ '
+	@echo 'building object: $@'
 	@echo '*********************************'
-	$(CPP) $(CFLAGS) $(WFLAGS) $(XLIBS) -c $< -o $@
+	$(CXX) $(CFLAGS) $(WFLAGS) -c $< -o $@
 
-all: $(EXE_1) $(EXE_2) $(EXE_3) $(LIB_SAMTOOLS) $(EXE_4) $(EXE_5)
-
-$(EXE_1): $(OBJS_1) Makefile #diri_sampler
+$(EXE_1): $(OBJS_1) # diri_sampler
 	@echo ''
 	@echo '*********************************'
-	@echo ' making executable: $@ '
+	@echo 'building executable: $@'
 	@echo '*********************************'
-	$(CPP) $(XLIBS) $(OBJS_1) -g -O2 -o  $(EXE_1)
+	$(CXX) $(XLIBS) $(OBJS_1) -g -O2 -o $(EXE_1)
 
-	@echo '*******************'
-	@echo 'compiled for $(host-type)'
-
-$(EXE_2): $(SRC_2) Makefile #contain
+$(EXE_2): $(SRC_2) # contain
 	@echo ''
 	@echo '*********************************'
-	@echo ' making executable: $@ '
+	@echo 'building executable: $@'
 	@echo '*********************************'
-	$(CPP) $(FLAGS_2) $(SRC_2) -o $(EXE_2)
+	$(CXX) $(FLAGS_2) $< -o $(EXE_2)
 
-	@echo '*******************'
-	@echo 'compiled for $(host-type)'
-
-$(EXE_3): $(SRC_3) Makefile #freqEst
+$(EXE_3): $(SRC_3) # freqEst
 	@echo ''
 	@echo '*********************************'
-	@echo ' making executable: $@ '
+	@echo 'building executable: $@'
 	@echo '*********************************'
-	$(CPP) $(FLAGS_3) $(SRC_3) -o $(EXE_3)
+	$(CXX) $(FLAGS_3) $< -o $(EXE_3)
 
-	@echo '*******************'
-	@echo 'compiled for $(host-type)'
-
-$(EXE_4): $(SRC_4) Makefile samtools #b2w
+$(EXE_4): $(SRC_4) $(LIB_SAMTOOLS) # b2w
 	@echo ''
 	@echo '*********************************'
-	@echo ' making executable: $@ '
+	@echo 'building executable: $@'
 	@echo '*********************************'
-	$(CPP) $(SRC_4) $(CFLAGS) $(FLAGS_4) -o $(EXE_4)
+	$(CXX) $(CFLAGS) $(FLAGS_4) $< -o $(EXE_4)
 	
-$(EXE_5): $(SRC_5) Makefile #fil
+$(EXE_5): $(SRC_5) # fil
 	@echo ''
 	@echo '*********************************'
-	@echo ' making executable: $@ '
+	@echo 'building executable: $@'
 	@echo '*********************************'
-	$(CPP) $(SRC_5) $(CFLAGS) $(FLAGS_5) -o $(EXE_5)
+	$(CXX) $(CFLAGS) $(FLAGS_5) $< -o $(EXE_5)
 
 
-$(LIB_SAMTOOLS): Makefile
+$(LIB_SAMTOOLS): $(LIB_SAMTOOLS)/Makefile # libbam.a
 	@echo ''
 	@echo '*********************************'
-	@echo 'Building samtools'
+	@echo 'building libbam.a'
 	@echo '*********************************'
-	for i in $(SUBDIRS) ; do \
-	( cd $$i ; make ; cd ../ ) ; \
-	done
+	$(MAKE) -C $(LIB_SAMTOOLS) lib
 
 
-.PHONY : clean doc
+.PHONY : clean doc $(LIB_SAMTOOLS)
 
 clean:
 	rm -rf $(OBJS_1)
