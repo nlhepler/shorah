@@ -7,10 +7,9 @@ whoami := $(shell whoami)
 host-type := $(shell uname)
 CCFLAGS = -Wall -Wextra -O2 -ffast-math -funroll-loops# -m32 -DDEBUG
 WFLAGS =
-VPATH = ./
 OLIBS = 
 CPP = g++
-SUBDIRS = ./samtools
+SUBDIRS = samtools
 
 # DOCUMENTATION
 DOXYGEN = /usr/bin/doxygen
@@ -18,8 +17,8 @@ DOXYFILE_1 = dpm_src/doxyfile
 
 # EDIT THESE LINES TO INCLUDE GSL
 CXLIBS = -lgsl -lgslcblas
-CFLAGS = $(CCFLAGS) -I/opt/local/include
-XLIBS  = -L/opt/local/lib $(CXLIBS)
+CFLAGS = $(CCFLAGS) -I/usr/local/include
+XLIBS  = -L/usr/local/lib $(CXLIBS)
 CPPFLAGS = $(CFLAGS)
 
 #SRC_1 = dpm_src/dmm_sampler.cpp
@@ -111,7 +110,13 @@ $(LIB_SAMTOOLS): Makefile
 .PHONY : clean doc
 
 clean:
-	rm -rf $(OBJS_1) $(EXE_1) $(EXE_2) $(EXE_3) $(EXE_2).dSYM $(EXE_3).dSYM *pyc ./*pyc
+	rm -rf $(OBJS_1)
+	rm -rf $(EXE_1) $(EXE_1).dSYM
+	rm -rf $(EXE_2) $(EXE_2).dSYM
+	rm -rf $(EXE_3) $(EXE_3).dSYM
+	rm -rf $(EXE_4) $(EXE_4).dSYM
+	rm -rf $(EXE_5) $(EXE_5).dSYM
+	rm -rf *.pyc pythonlib/*.pyc
 	for i in $(SUBDIRS); do \
 	( cd $$i ; make clean ; cd ../ ) ;\
 	done

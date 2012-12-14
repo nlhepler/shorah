@@ -78,6 +78,12 @@ static int fetch_func1(const bam1_t *b, void *data)
                 << rd 
                 << "\n";
             }
+        else {
+            // cerr << "skipping read: " << bam1_qname(b) << ", overlap: " << overlap << endl;
+            }
+        }
+    else {
+        // cerr << "exceeded coverage?: " << *cv << endl;
         }
     return 0;
 }
@@ -147,7 +153,17 @@ int main(int argc, char *argv[])
     tmpstruct_t tmp;                                      //data for callback functions
 
 
-    char help_string[] = "\nUsage: b2w [options] <in.bam> <in.fasta> region\n\nOptions:\n\t-w: window length (INT)\n\t-i: increment (INT)\n\t-m: minimum overlap (INT)\n\t-x: max reads starting at a position (INT)\n\t-h: show this help\n\n";
+    char help_string[] =
+        "\n"
+        "Usage: b2w [options] <in.bam> <in.fasta> region\n"
+        "\n"
+        "Options:\n"
+        "\t-w: window length (INT)\n"
+        "\t-i: increment (INT)\n"
+        "\t-m: minimum overlap (INT)\n"
+        "\t-x: max reads starting at a position (INT)\n"
+        "\t-h: show this help\n"
+        "\n";
 
     while((c = getopt(argc, argv, "w:i:m:x:h")) != EOF)
     {

@@ -15,26 +15,26 @@ SANGER_SCORE_OFFSET = ord("!")
 q_mapping = dict()
 for letter in range(0,255):
     q_mapping[chr(letter)] = letter-SANGER_SCORE_OFFSET
-QC = 6 
+QC = 6
 
 def getseq(AlignedRead, start=0, stop=0, qcutoff=QC):
     """Retrieve the sequence of an AlignedRead object between start and stop
     of the reference position. The output will be padded by N's if the
     region exceeds the read length.
-    
+
     """
     rpos = 0 # position in the read
     gaps = 0 # number of gaps added
     fasta = str() # will hold the alignment
-    
+
     # Aligned?
     if AlignedRead.is_unmapped:
         return
-    
+
     rseq = AlignedRead.seq
     pos = AlignedRead.pos
     seq = ""
-    
+
     for i,s in enumerate(rseq):
         try:
             if q_mapping[AlignedRead.qual[i]] >= qcutoff:
@@ -43,7 +43,7 @@ def getseq(AlignedRead, start=0, stop=0, qcutoff=QC):
                 seq += 'N'
         except TypeError:
             seq += s
-    
+
     ins = []
     gpos = pos
     # cigar alignment (operation, length)
@@ -66,13 +66,13 @@ def getseq(AlignedRead, start=0, stop=0, qcutoff=QC):
 
     else:
         fasta += seq
-    
+
     # Pad the ends
     for i in range(pos - start):
         fasta = 'n' + fasta
     for i in range(stop - pos - AlignedRead.rlen - gaps):
         fasta = fasta + 'n'
-    
+
     # Compute range to output
     begin = max(0, start - AlignedRead.pos)
     end = stop - start + 1 + begin
@@ -107,7 +107,7 @@ def getSeqRecord(AlignedRead, start=0, stop=0):
         "insertions": ins,
         "pos": AlignedRead.pos}
         )
-    
+
 def bam2fasta(sam_name, chrom=None, start=None, stop=None, minlen=1, \
               out=sys.stdout, qcutoff=QC, strand=2):
     """Extract the reads from an samfile and print as fasta.
@@ -132,7 +132,7 @@ def bam2Alignment(sam_name, chrom = None, start = None, stop = None, minlen = 1)
     for read in it:
         if read.rlen - start + read.pos + 1 > minlen  and stop - read.pos +1 >= minlen:
             aln.append(getSeqRecord(read, start=start, stop=stop))
-            
+
     return aln
 
 def gap_span(reads, bases):
@@ -162,16 +162,16 @@ def insert_gap(rec_seq, ins_info):
         offset += len(info[1])
 
     return ''.join(new_seq).replace('n', '-')
-    
+
 
 def multAlign(aln):
 
     from Bio.Seq import Seq
-    
+
     ins_len = {}
     ins_id = {} # stores what to insert, where and for who
     al_reads = [rec.id for rec in aln]
-    
+
     # record the insertions positions for all reads
     for rec in aln:
         ins_arr = []
@@ -187,7 +187,7 @@ def multAlign(aln):
                     ins_len[i[0]] = max(ins_len[i[0]], len(i[1]))
         if ins_arr != []:
             ins_id[rec.id] = ins_arr
-            
+
     for k, v in ins_id.items():
         print >> sys.stderr, '-------->insertion from read ', k, ' at ', v
     # some auxiliary quantities
@@ -195,7 +195,7 @@ def multAlign(aln):
     cut_points = [s[0] for s in s_ins]
     cut_points.insert(0, 0)
     cut_points.append(None)
-    
+
     # here we *expand* the alignment by padding with gaps
     # the positions were any read shows insertions
     edited = gap_span(al_reads, 0)
@@ -213,17 +213,17 @@ def multAlign(aln):
         else:
             rec.seq = Seq(insert_gap(rec.seq, ins_id[rec.id]), alphabet)
             rec.description='| InsertionsAdded'
-            
+
     return edited
 
-    
+
 if __name__ == "__main__":
     '''Main does the main
     '''
     from optparse import OptionParser
 
     from Bio import AlignIO
-    
+
     parser = OptionParser(usage = "%prog [options] <bamfile>")
     parser.add_option("-c", '--chromosome', type = 'string', dest = 'chrom', default = None,
                       help = "Chromosome [None]")
@@ -239,7 +239,7 @@ if __name__ == "__main__":
                       help = "Only report alignment from strand (0: forward, 1: reverse, 2: both) [2].")
     parser.add_option("-o", '--outfile', type = 'string', dest = 'outfile', default = None,
                       help = "Print output [stdout].")
-    
+
     (options, args) = parser.parse_args(sys.argv[1:])
     if len(args) != 1: parser.error("Incorrect number of arguments.")
     samfile = pysam.Samfile(args[0], 'rb')

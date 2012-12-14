@@ -50,7 +50,7 @@ def run_f2r(filein):
     2. translate to read format
     output: filein.read
     """
-    
+
     my_prog = 'perl -I %s %s' % (dn+'/perllib', os.path.join(dn, 'fas2read.pl'))
     my_arg  = " -f %s" % filein
     assert os.path.isfile(filein), 'File %s not found' % filein
@@ -65,7 +65,7 @@ def run_f2r(filein):
             sholog.debug("Child %s returned %i" % (my_prog, retcode))
     except OSError, ee:
         sholog.error("Execution of %s failed:" % my_prog, ee)
-    
+
     return retcode
 
 
@@ -74,7 +74,7 @@ def run_contain(filein):
     3. eliminate redundant reads
     output: filein.rest
     """
-    
+
     my_prog = os.path.join(dn, 'contain')
     my_arg  = " -f %s" % filein
     assert os.path.isfile('%s.fas' % filein), 'File %s not found' % filein
@@ -89,13 +89,13 @@ def run_contain(filein):
             sholog.debug("Child %s returned %i" % (my_prog, retcode))
     except OSError, ee:
         sholog.error("Execution of %s failed:" % my_prog, ee)
-    
+
     return retcode
 
 def run_snv(reference,bam,sigma,incr):
-    """ 
+    """
     x. Parse SNVs from local support, run strand bias
-    output: raw_snv, snvs in 2+ windows, snvs + strand test 
+    output: raw_snv, snvs in 2+ windows, snvs + strand test
     """
     my_prog = os.path.join(dn, 'snv.py')
     my_arg = " -r %s -b %s -s %f -i %d" % (reference, bam, sigma, incr)
@@ -120,7 +120,7 @@ def run_mm(filein, max_hap=200):
     my_arg  = " %s %i" % ('%s.rest' % filein, max_hap)
 
     assert os.path.isfile('%s.rest' % filein), 'File %s not found' % filein
-    
+
     #minimal coverage of the read graph
     try:
         retcode = subprocess.call(my_prog + my_arg, shell=True)
@@ -165,13 +165,13 @@ def main():
     import shutil
     import glob
     import dec
-    
+
     # parse command line
     optparser = optparse.OptionParser()
-    
+
     optparser.add_option("-b", "--bam", help="sorted bam format alignment file.",
                          default="", type="string", dest="b")
-    optparser.add_option("-f", "--fasta", help="reference genome in fasta format.", 
+    optparser.add_option("-f", "--fasta", help="reference genome in fasta format.",
                          default="", type="string", dest="f")
     optparser.add_option("-a", "--alpha", help="alpha in dpm sampling <0.01>", default=0.01,
                          type="float", dest="a")
@@ -199,7 +199,7 @@ def main():
     sigma = options.i
     alpha = options.a
     region = options.r
-    
+
     in_stem=os.path.split(in_bam)[1].split('.')[0]
 
     if not os.path.exists('snv/SNV.txt'):
@@ -232,12 +232,12 @@ def main():
             sys.exit()
 
 
-        
+
     # run snv.py
     sholog.debug('running snv.py')
     retcode = run_snv(in_fasta, in_bam, sigma, step/win_shifts)
     if retcode is not 0:
-        sholog.error('snv calling failed')    
+        sholog.error('snv calling failed')
 
     # tidy snvs
     try:

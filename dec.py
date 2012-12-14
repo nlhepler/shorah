@@ -83,7 +83,7 @@ def gzip_file(f_name):
     f_out.close()
     f_in.close()
     os.remove(f_in.name)
-    
+
     return f_out.name
 
 def parse_aligned_reads(reads_file):
@@ -91,24 +91,24 @@ def parse_aligned_reads(reads_file):
     Parse reads from a file with aligned reads in fasta format
     """
     out_reads = {}
-    
+
     if not os.path.isfile(reads_file):
         declog.error('There should be a file here: ' + reads_file)
         sys.exit('There should be a file here: ' + reads_file)
     else:
         declog.info( 'Using file ' + reads_file + ' of aligned reads')
-    
+
     handle = open(reads_file)
     declog.debug('Parsing aligned reads')
-    
+
     for h in handle:
-        name, start, stop, mstart, mstop, this_m = h.rstrip().split('\t') 
+        name, start, stop, mstart, mstop, this_m = h.rstrip().split('\t')
         out_reads[name] = [ None, None, None, None, [] ]
-        out_reads[name][0] = int(start) # 
-        out_reads[name][1] = int(stop) # 
+        out_reads[name][0] = int(start) #
+        out_reads[name][1] = int(stop) #
         out_reads[name][2] = int(mstart) # this is
         out_reads[name][3] = int(mstop)  # this too
-        out_reads[name][4] = this_m 
+        out_reads[name][4] = this_m
 
     return out_reads
 
@@ -144,13 +144,13 @@ def run_dpm(run_setting):
     dn = os.path.dirname(__file__)
     my_prog = os.path.join(dn, 'diri_sampler')
     my_arg =  ' -i %s -j %i -t %i -a %f -K %d' % (filein, j, int(j*hist_fraction), a, init_K)
-    
+
     try:
         #os.remove('./corrected.tmp' )
         os.remove('./assignment.tmp')
     except:
         pass
-    
+
     # runs the gibbs sampler for the dirichlet process mixture
     try:
         retcode = subprocess.call(my_prog + my_arg, shell=True)
@@ -162,7 +162,7 @@ def run_dpm(run_setting):
             declog.debug('Child diri_sampler returned %i' % retcode)
     except OSError, ee:
         declog.error('Execution of diri_sampler failed: %s' % ee)
-    
+
     return
 
 
@@ -174,7 +174,7 @@ def correct_reads(chr, wstart, wend):
     # out_reads[match_rec.id][2] = mstart
     # out_reads[match_rec.id][3] = mstop
     # out_reads[match_rec.id][4] = Sequence...
-    
+
     from Bio import SeqIO
     import gzip
     try:
@@ -184,7 +184,7 @@ def correct_reads(chr, wstart, wend):
         else:
             cor_file = 'w-%s-%s-%s.reads-cor.fas' % (chr, wstart, wend)
             handle = open(cor_file, 'rb')
-            
+
         for seq_record in SeqIO.parse(handle, 'fasta'):
             assert '\0' not in seq_record.seq.tostring(), 'binary file!!!'
             read_id = seq_record.id # read_name_rule.search(seq_record.id).group(1)
@@ -203,7 +203,7 @@ def correct_reads(chr, wstart, wend):
     except IOError:
         declog.warning('No reads in window %s?' % wstart)
         return
-    
+
 
 def get_prop(filename):
     """
@@ -224,7 +224,7 @@ def get_prop(filename):
         return prop
     except:# IOError, UnboundLocalError:
         return 'not found'
-        
+
 
 def base_break(baselist):
     """
@@ -236,7 +236,7 @@ def base_break(baselist):
     for c in baselist:
         if c.upper() != 'N':
             count[c.upper()] += 1
-        
+
     maxm = 0
     out = []
     for b in count:
@@ -247,7 +247,7 @@ def base_break(baselist):
             out.append(b)
 
     rc = random.choice(out)
-    
+
     return rc
 
 def win_to_run(alpha):
@@ -288,19 +288,19 @@ def main(in_bam, in_fasta, step, win_shifts, max_coverage, sigma, region, keep_a
     from multiprocessing import Pool
     import shutil
     import glob
-    
+
     if step % win_shifts != 0:
         sys.exit('Window size must be divisible by win_shifts')
-        
+
     if win_min_ext < 1/float(win_shifts):
         declog.warning('Warning: some bases might not be covered by any window')
-        
+
     if max_coverage/step < 1:
         sys.exit('Please increase max_coverage')
 
     incr = step/win_shifts
     max=max_coverage/step
-    
+
     if not os.path.isfile(in_bam):
         sys.exit("File '%s' not found" % in_bam)
 
@@ -315,12 +315,12 @@ def main(in_bam, in_fasta, step, win_shifts, max_coverage, sigma, region, keep_a
     aligned_reads = parse_aligned_reads('reads.fas')
     r = aligned_reads.keys()[0]
     gen_length = aligned_reads[r][1] - aligned_reads[r][0]
-   
+
     if step > gen_length:
         sys.exit('The window size must be smaller than the genome region')
- 
+
     declog.info('%s reads are being considered' %  len(aligned_reads))
-    
+
     for k in aligned_reads.keys():
         to_correct[k] = [None, None, None, None, []]
         to_correct[k][0] = aligned_reads[k][0]
@@ -332,14 +332,14 @@ def main(in_bam, in_fasta, step, win_shifts, max_coverage, sigma, region, keep_a
     ############################################
     # Now the windows and the error correction #
     ############################################
-    
-    
+
+
     runlist = win_to_run(alpha)
-    
+
     # run diri_sampler on all available processors
     pool = Pool(processes=max_proc)
     pool.map(run_dpm, runlist)
-    
+
     # prepare directories
     if keep_all_files:
         for sd_name in ['debug', 'sampling', 'freq', 'support', 'corrected', 'raw_reads']:
@@ -347,12 +347,12 @@ def main(in_bam, in_fasta, step, win_shifts, max_coverage, sigma, region, keep_a
                 os.mkdir(sd_name)
             except OSError:
                 pass
-    
+
     # parse corrected reads
     proposed= {}
     for i in runlist:
         winFile, j, a = i
-        parts=winFile.split('-')       
+        parts=winFile.split('-')
         chr=parts[1]
         beg=parts[2]
         end=parts[3].split('.')[0]
@@ -364,7 +364,7 @@ def main(in_bam, in_fasta, step, win_shifts, max_coverage, sigma, region, keep_a
         # if os.path.exists(dbg_file):
         proposed[beg] = (get_prop(dbg_file), j)
         declog.info('there were %s proposed' % str(proposed[beg][0]))
-            
+
     # (re)move intermediate files
     if not keep_all_files:
         tr_files = glob.glob('./w*reads.fas')
@@ -378,7 +378,7 @@ def main(in_bam, in_fasta, step, win_shifts, max_coverage, sigma, region, keep_a
         tr_files.extend(glob.glob('./w*reads-support.fas'))
         for trf in tr_files:
             if os.stat(trf).st_size == 0:
-                os.remove(trf)                        
+                os.remove(trf)
     else:
         for dbg_file in glob.glob('./w*dbg'):
             if os.stat(dbg_file).st_size > 0:
@@ -446,7 +446,7 @@ def main(in_bam, in_fasta, step, win_shifts, max_coverage, sigma, region, keep_a
             else:
                 os.remove(raw_file)
 
-                    
+
     ############################################
     ##      Print the corrected reads         ##
     ##
@@ -455,7 +455,7 @@ def main(in_bam, in_fasta, step, win_shifts, max_coverage, sigma, region, keep_a
     # ##########################################
     reason = [0, 0, 0]
     declog.info('now correct')
-    
+
     creads = 0
     storestore = []
     for r in to_correct:
@@ -465,8 +465,8 @@ def main(in_bam, in_fasta, step, win_shifts, max_coverage, sigma, region, keep_a
         if creads % 500 == 0:
             declog.info('considered %d corrected reads' % creads)
         rlen = len(aligned_reads[r][4]) # length of original read
-        rst = aligned_reads[r][2] # read start in the reference 
-        
+        rst = aligned_reads[r][2] # read start in the reference
+
         corrstore = []
         for rpos in range(rlen):
             this = []
@@ -481,7 +481,7 @@ def main(in_bam, in_fasta, step, win_shifts, max_coverage, sigma, region, keep_a
                     tc = correction[r][cst][tp]
                     this.append(tc)
                     corrstore.append(rpos)
-                    
+
             if len(this) > 0: cb = base_break(this)
             else: cb = 'X'
             to_correct[r][4].append(cb)
@@ -518,14 +518,14 @@ def main(in_bam, in_fasta, step, win_shifts, max_coverage, sigma, region, keep_a
                     cc = cc + 1
                     if cc % fasta_length == 0:
                         fch.write('\n')
-                        
+
             if cc % fasta_length != 0:
                 fch.write('\n')
     fch.close()
-    
+
  #   for k, v, in ccx.items():
   #      print k, v
-        
+
     # write proposed_per_step to file
     ph = open('proposed.dat', 'w')
     ph.write('#base\tproposed_per_step\n')
@@ -535,11 +535,11 @@ def main(in_bam, in_fasta, step, win_shifts, max_coverage, sigma, region, keep_a
     ph.close()
 
 if __name__ == "__main__":
-    
+
     import optparse
     # parse command line
     optparser = optparse.OptionParser()
-    
+
     optparser.add_option("-b", "--bam", help="file with aligned reads <.bam format>",
                          default="", type="string", dest="b")
     optparser.add_option("-f", "--fasta", help="reference genome in fasta format.",
@@ -565,9 +565,9 @@ if __name__ == "__main__":
                          action="store_true", default=False, dest="d")
     optparser.add_option("-n","--no_pad_insert",help="do not insert padding gaps in .far file<default=insert>",
                          action="store_false", default=True, dest="pad")
-                         
+
     (options, args) = optparser.parse_args()
-    
+
     supported_formats = {
         'bam': 'aligned reads',
         'fasta': 'reference genome'
