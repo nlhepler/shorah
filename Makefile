@@ -97,16 +97,18 @@ $(LIB_SAMTOOLS): $(LIB_SAMTOOLS)/Makefile # libbam.a
 .PHONY : clean doc $(LIB_SAMTOOLS)
 
 clean:
-	rm -rf $(OBJS_1)
+	rm -f $(OBJS_1)
 	rm -rf $(EXE_1) $(EXE_1).dSYM
 	rm -rf $(EXE_2) $(EXE_2).dSYM
 	rm -rf $(EXE_3) $(EXE_3).dSYM
 	rm -rf $(EXE_4) $(EXE_4).dSYM
 	rm -rf $(EXE_5) $(EXE_5).dSYM
-	rm -rf *.pyc pythonlib/*.pyc
+	rm -f *.pyc pythonlib/*.pyc
 	for i in $(SUBDIRS); do \
 	( cd $$i ; make clean ; cd ../ ) ;\
 	done
+	rm -f *.bai *.fai
+
 doc:
 	$(DOXYGEN) $(DOXYFILE_1)
 #	$(DOXYGEN) $(DOXYFILE_2)
