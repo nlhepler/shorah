@@ -31,8 +31,8 @@ SRC_3 = freqEst_src/freqEst.cc
 EXE_3 = freqEst
 FLAGS_3 = -g -O3 -Wall -ffast-math
 
-SRC_4 = b2w_src/b2w.c
-SRC_5 = filter_src/fil.c
+SRC_4 = b2w_src/b2w.cc
+SRC_5 = filter_src/fil.cc
 EXE_4 = b2w
 EXE_5 = fil
 FLAGS_4 = -I./samtools -L./samtools -lbam -lm -lz
@@ -48,42 +48,42 @@ dpm_src/%.o: dpm_src/%.cpp dpm_src/%.h dpm_src/data_structures.h # only used for
 	@echo '*********************************'
 	@echo 'building object: $@'
 	@echo '*********************************'
-	$(CXX) $(CFLAGS) $(WFLAGS) -c $< -o $@
+	$(CXX) -c $< -o $@ $(CFLAGS) $(WFLAGS)
 
 $(EXE_1): $(OBJS_1) # diri_sampler
 	@echo ''
 	@echo '*********************************'
 	@echo 'building executable: $@'
 	@echo '*********************************'
-	$(CXX) $(XLIBS) $(OBJS_1) -g -O2 -o $(EXE_1)
+	$(CXX) $(OBJS_1) -o $(EXE_1) -g -O2 $(XLIBS)
 
 $(EXE_2): $(SRC_2) # contain
 	@echo ''
 	@echo '*********************************'
 	@echo 'building executable: $@'
 	@echo '*********************************'
-	$(CXX) $(FLAGS_2) $< -o $(EXE_2)
+	$(CXX) $< -o $(EXE_2) $(FLAGS_2)
 
 $(EXE_3): $(SRC_3) # freqEst
 	@echo ''
 	@echo '*********************************'
 	@echo 'building executable: $@'
 	@echo '*********************************'
-	$(CXX) $(FLAGS_3) $< -o $(EXE_3)
+	$(CXX) $< -o $(EXE_3) $(FLAGS_3)
 
 $(EXE_4): $(SRC_4) $(LIB_SAMTOOLS) # b2w
 	@echo ''
 	@echo '*********************************'
 	@echo 'building executable: $@'
 	@echo '*********************************'
-	$(CXX) $(CFLAGS) $(FLAGS_4) $< -o $(EXE_4)
+	$(CXX) $< -o $(EXE_4) $(CFLAGS) $(FLAGS_4)
 	
 $(EXE_5): $(SRC_5) # fil
 	@echo ''
 	@echo '*********************************'
 	@echo 'building executable: $@'
 	@echo '*********************************'
-	$(CXX) $(CFLAGS) $(FLAGS_5) $< -o $(EXE_5)
+	$(CXX) $< -o $(EXE_5) $(CFLAGS) $(FLAGS_5)
 
 
 $(LIB_SAMTOOLS): $(LIB_SAMTOOLS)/Makefile # libbam.a
