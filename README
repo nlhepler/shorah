@@ -34,9 +34,8 @@ GENERAL USAGE:
 --------------------------------------------------
 
 Install:
-	From within the samtools directory, type 'make'. Then, from within
-        shorah directory, type 'make' to build the C++ and C programs, then 
-        run. See INSTALL for additional information.
+	From within the samtools directory, type 'make'. See INSTALL for
+        additional information.
 
 Run:
 	Type shorah.py -h for command line instructions. 
