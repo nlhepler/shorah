@@ -530,7 +530,7 @@ def main(in_bam, in_fasta, step, win_shifts, max_coverage, sigma, region, keep_a
     ph = open('proposed.dat', 'w')
     ph.write('#base\tproposed_per_step\n')
     for kp in sorted(proposed.iterkeys()):
-        if proposed[kp] != 'not found':
+        if proposed[kp][0] != 'not found':
             ph.write('%s\t%f\n' % (kp, float(proposed[kp][0])/proposed[kp][1]))
     ph.close()
 
